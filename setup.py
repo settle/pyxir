@@ -35,7 +35,7 @@ from setuptools.command.build_ext import build_ext
 
 from pathlib import Path
 
-__version__ = '0.1.3'
+__version__ = '0.1.4'
 
 FILE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -265,7 +265,7 @@ setuptools.setup(
     ],
     python_requires='>=3.6',
     install_requires=['numpy', 'pydot==1.4.1',
-                      'h5py==2.10.0'],
+                      'h5py>=2.8.0'],
     extra_require={'full': ['tensorflow>=1.12.0,<2']},
     # cmdclass={'build_ext': BuildExt},
     cmdclass={

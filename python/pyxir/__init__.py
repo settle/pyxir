@@ -12,11 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Base module for PyXIR APIs
-
-
-"""
+"""The PyXIR module"""
 
 import os
 
@@ -30,7 +26,8 @@ from pyxir.targets.cpu import build_for_cpu_execution,\
 from .graph.xop_registry import XOpRegistry, xop_register_op_layout_transform,\
     xop_register_op_transpose_transform
 
-__version__ = "0.1.3"
+__version__ = "0.1.4"
+
 
 device_r = TargetRegistry()
 

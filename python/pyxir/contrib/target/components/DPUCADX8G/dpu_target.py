@@ -23,9 +23,12 @@ import warnings
 import numpy as np
 
 import pyxir
+from pyxir.graph import XGraph, XLayer
+from pyxir.target import Target, DefaultOpSupportPass
 from pyxir.runtime import base
 from pyxir.runtime.rt_layer import BaseLayer
 from pyxir.graph.transformers import subgraph
+from pyxir.graph.pattern import XGraphPatternMutator, XGraphPatternAnnotator
 from pyxir.generator.tensorflow import XGraphTfGeneratorOptimizer
 from pyxir.graph.optimization.optimizers import QOptimizer, ExternalQOptimizer
 from pyxir.quantization.default_quantizer import XGraphDefaultQuantizer
@@ -43,21 +46,56 @@ logger = logging.getLogger('pyxir')
 
 FILE_PATH = os.path.dirname(os.path.realpath(__file__))
 
+class OpSupportPass(DefaultOpSupportPass):
 
-def xgraph_dpu_build_func(xgraph, work_dir=os.getcwd(), **kwargs):
+    def __init__(self, target: Target):
+        super().__init__(target)
 
+    def __call__(self, xg: XGraph) -> None:
+        """Call Pattern Annotator pass on XGraph before calling default op support functionality"""
+        XGraphPatternAnnotator()(xg)
+        super(OpSupportPass, self).__call__(xg)
+
+
+def xgraph_dpu_op_support_annotator(xg: XGraph, target: Target, **kwargs) -> None:
+    OpSupportPass(target)(xg)
+
+
+def xgraph_dpu_build_func(xgraph, work_dir=os.getcwd(), data_layout='NCHW', **kwargs) -> XGraph:
+    """
+    Build/schedule and XGraph for execution on the DPUCADX8G target
+
+    Arguments:
+    ----------
+    xgraph: XGraph
+        the xgraph to be built for execution
+    work_dir: str
+        the path to the work directory to be used
+    data_layout: str
+        the layout to be used for the DPU partitions, is NCHW by default but can be
+        overridden for certain runtimes, for example the decentq simulation runtime
+        makes use of this because quantization simulation is done in NHWC data layout
+        instead of the NCHW data layout of the DPU
+
+    Returns:
+    --------
+    And XGraph built/scheduled for execution on DPU
+    """
     # NOTE DPU V1 layers are in NHWC format because of the tensorflow
     #   intemediate structure we use to communicate with dpu v1 compiler
     return subgraph.xgraph_build_func(
         xgraph=xgraph,
         target='DPUCADX8G',
         xtype='DPU',
-        layout='NCHW',
+        layout=data_layout,
         work_dir=work_dir
     )
 
 
 def xgraph_dpu_optimizer(xgraph, target=None, **kwargs):
+    # Annoate and merge patterns (e.g. mul + max = leaky relu)
+    XGraphPatternAnnotator()(xgraph)
+    xgraph = XGraphPatternMutator(xgraph)()
 
     layout_transform_pass = \
         XGraphLayoutTransformationPass('NHWC', target=target)
@@ -103,7 +141,7 @@ def xgraph_dpu_quantizer(xgraph, inputs_func, **kwargs):
 
 
 def xgraph_dpu_compiler(xgraph, **kwargs):
-
+    """The DPU specific compiler function"""
     # TODO: can we move to docker paths to arch file?
     # Vitis-AI 1.1
     old_arch = "/opt/vitis_ai/compiler/arch/dpuv1/ALVEO/ALVEO.json"

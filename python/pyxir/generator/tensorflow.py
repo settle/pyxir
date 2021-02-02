@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-""" Module for generating a tensorflow graph from an XGraph """
+"""Module for generating a tensorflow graph from an XGraph"""
 
 import os
 import logging
@@ -28,8 +28,6 @@ from pyxir.graph.optimization.optimizers.basic_optimizer \
 from pyxir.runtime.runtime_factory import RuntimeFactory
 from pyxir.graph.xgraph_factory import XGraphFactory
 from pyxir.graph.partitioning.xgraph_partitioner import XGraphPartitioner
-from pyxir.graph.transformers.layout_transformation_pass \
-    import XGraphLayoutTransformationPass
 
 logger = logging.getLogger('pyxir')
 

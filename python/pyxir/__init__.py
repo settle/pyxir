@@ -26,7 +26,7 @@ from pyxir.targets.cpu import build_for_cpu_execution,\
 from .graph.xop_registry import XOpRegistry, xop_register_op_layout_transform,\
     xop_register_op_transpose_transform
 
-__version__ = "0.1.4"
+__version__ = "0.1.5"
 
 
 device_r = TargetRegistry()
@@ -68,6 +68,7 @@ def register_target(target,
                     xgraph_quantizer,
                     xgraph_compiler,
                     xgraph_build_func,
+                    xgraph_op_support_annotator=None,
                     skip_if_exists=False):
     # type: (str, Function, Function, Function, Function,
     #        boolean) -> None
@@ -76,6 +77,7 @@ def register_target(target,
                              xgraph_quantizer,
                              xgraph_compiler,
                              xgraph_build_func,
+                             xgraph_op_support_annotator=xgraph_op_support_annotator,
                              skip_if_exists=skip_if_exists)
 
 register_target('cpu',
